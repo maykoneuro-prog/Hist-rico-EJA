@@ -396,41 +396,70 @@ export const studentService = {
     });
   },
 
-  async deleteAll() {
-    const paths = ['students', 'auditLogs'];
+  async deleteAll(onProgress?: (progress: number) => void) {
     let totalDeleted = 0;
     
     try {
       // 1. Delete Audit Logs in chunks
+      if (onProgress) onProgress(5);
       const auditSnapshot = await getDocs(collection(db, 'auditLogs'));
       const auditDocs = auditSnapshot.docs;
-      for (let i = 0; i < auditDocs.length; i += 50) {
+      
+      for (let i = 0; i < auditDocs.length; i += 500) {
         const batch = writeBatch(db);
-        const chunk = auditDocs.slice(i, i + 50);
+        const chunk = auditDocs.slice(i, i + 500);
         chunk.forEach(d => batch.delete(d.ref));
         await batch.commit();
         totalDeleted += chunk.length;
       }
+      if (onProgress) onProgress(20);
 
       // 2. Delete Students and their Grades subcollections
       const studentsSnapshot = await getDocs(collection(db, 'students'));
       const studentDocs = studentsSnapshot.docs;
-      
-      for (const studentDoc of studentDocs) {
-        // Find and delete all grades for this student
-        const gradesSnapshot = await getDocs(collection(db, 'students', studentDoc.id, 'grades'));
-        const gradeDocs = gradesSnapshot.docs;
+      const totalStudents = studentDocs.length;
+
+      if (totalStudents === 0) {
+        if (onProgress) onProgress(100);
+        return totalDeleted;
+      }
+
+      // Process students in larger chunks to speed up grade fetching
+      const chunkSize = 20;
+      for (let i = 0; i < totalStudents; i += chunkSize) {
+        const studentChunk = studentDocs.slice(i, i + chunkSize);
         
-        for (let i = 0; i < gradeDocs.length; i += 50) {
-          const batch = writeBatch(db);
-          const chunk = gradeDocs.slice(i, i + 50);
-          chunk.forEach(d => batch.delete(d.ref));
+        // Fetch all grades for this chunk of students in parallel
+        const gradesPromises = studentChunk.map(sDoc => getDocs(collection(db, 'students', sDoc.id, 'grades')));
+        const gradesSnapshots = await Promise.all(gradesPromises);
+        
+        const batch = writeBatch(db);
+        let batchCount = 0;
+
+        // Add grades to batch
+        gradesSnapshots.forEach(gSnap => {
+          gSnap.docs.forEach(gDoc => {
+            batch.delete(gDoc.ref);
+            batchCount++;
+            totalDeleted++;
+          });
+        });
+
+        // Add students to batch
+        studentChunk.forEach(sDoc => {
+          batch.delete(sDoc.ref);
+          batchCount++;
+          totalDeleted++;
+        });
+
+        if (batchCount > 0) {
           await batch.commit();
         }
-        
-        // Delete the student doc itself
-        await deleteDoc(studentDoc.ref);
-        totalDeleted++;
+
+        if (onProgress) {
+          const progress = 20 + Math.floor(((i + studentChunk.length) / totalStudents) * 80);
+          onProgress(progress);
+        }
       }
       
       return totalDeleted;

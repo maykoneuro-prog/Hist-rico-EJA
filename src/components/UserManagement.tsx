@@ -68,6 +68,9 @@ export default function UserManagement() {
     }
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState(0);
+
   const handleApprove = async (uid: string) => {
     if (!confirm('Deseja aprovar este usuário?')) return;
     await userService.approve(uid);
@@ -86,8 +89,57 @@ export default function UserManagement() {
     setUsers(users.filter(u => u.uid !== uid));
   };
 
+  const handleZerarBanco = async () => {
+    if (confirm('ATENÇÃO: Deseja apagar TODOS os registros de alunos? Esta ação é irreversível e deve ser usada apenas para iniciar o uso em produção.')) {
+      try {
+        setIsDeleting(true);
+        setDeleteProgress(0);
+        const count = await studentService.deleteAll((progress) => {
+          setDeleteProgress(progress);
+        });
+        alert(`${count} registros (incluindo notas e auditoria) foram apagados com sucesso.`);
+        window.location.reload();
+      } catch (error) {
+        console.error(error);
+        alert('Erro ao limpar banco de dados.');
+      } finally {
+        setIsDeleting(false);
+        setDeleteProgress(0);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-6 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center space-y-6 border border-gray-100">
+            <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Trash2 className="text-red-600" size={32} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Limpando Base de Dados</h3>
+              <p className="text-sm text-gray-500 mt-2">Isso pode levar alguns segundos dependendo do volume de dados.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-red-600">
+                <span>Progresso da Exclusão</span>
+                <span>{deleteProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-red-600 h-full transition-all duration-300" 
+                  style={{ width: `${deleteProgress}%` }}
+                />
+              </div>
+            </div>
+
+            <p className="text-[10px] text-gray-400 font-medium">Por favor, não feche esta janela até concluir.</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-gray-900 border-l-4 border-emerald-500 pl-3">Controle de Acessos</h2>
@@ -257,25 +309,11 @@ export default function UserManagement() {
               Esta ação irá apagar permanentemente TODOS os registros de alunos e históricos do banco de dados. Use apenas para preparar o ambiente de produção.
             </p>
             <button
-              onClick={async () => {
-                if (confirm('ATENÇÃO: Deseja apagar TODOS os registros de alunos? Esta ação é irreversível e deve ser usada apenas para iniciar o uso em produção.')) {
-                  try {
-                    setLoading(true);
-                    const count = await studentService.deleteAll();
-                    alert(`${count} registros foram apagados com sucesso. O sistema está pronto para produção.`);
-                    window.location.reload();
-                  } catch (error) {
-                    console.error(error);
-                    alert('Erro ao limpar banco de dados.');
-                  } finally {
-                    setLoading(false);
-                  }
-                }
-              }}
-              disabled={loading}
+              onClick={handleZerarBanco}
+              disabled={isDeleting || loading}
               className="w-full py-2.5 bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-700 transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              {loading ? 'Processando...' : 'Zerar Banco de Dados (Produção)'}
+              {isDeleting ? 'Processando...' : 'Zerar Banco de Dados (Produção)'}
             </button>
           </div>
         </div>
