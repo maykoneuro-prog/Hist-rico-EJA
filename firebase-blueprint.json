@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "Student data for school records",
+      "type": "object",
+      "properties": {
+        "unidade": { "type": "string" },
+        "periodo": { "type": "string" },
+        "ano": { "type": "string" },
+        "situacaoMatricula": { "type": "string" },
+        "ra": { "type": "string" },
+        "turma": { "type": "string" },
+        "aluno": { "type": "string" },
+        "dataNascimento": { "type": "string" },
+        "cpf": { "type": "string" },
+        "rg": { "type": "string" },
+        "telefone": { "type": "string" },
+        "email": { "type": "string" },
+        "pai": { "type": "string" },
+        "mae": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDENTE", "CONCLUIDO"] },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "lastModifiedBy": { "type": "string" },
+        "lastModifiedByName": { "type": "string" }
+      },
+      "required": ["aluno", "ra", "status"]
+    },
+    "grade": {
+      "title": "Grade",
+      "description": "Student grades per discipline",
+      "type": "object",
+      "properties": {
+        "discipline": { "type": "string" },
+        "score": { "type": "string" },
+        "area": { "type": "string" }
+      },
+      "required": ["discipline", "score"]
+    },
+    "auditLog": {
+      "title": "Audit Log",
+      "description": "Log of changes in the system",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "appUser": {
+      "title": "App User",
+      "description": "User of the management system",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" }
+      }
+    },
+    "appSettings": {
+      "title": "App Settings",
+      "description": "Global application configurations",
+      "type": "object",
+      "properties": {
+        "letterheads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "url": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/settings/{settingId}": {
+      "schema": "appSettings",
+      "description": "Global settings"
+    },
+    "/students/{studentId}": {
+      "schema": "student",
+      "description": "Collection of students"
+    },
+    "/students/{studentId}/grades/{gradeId}": {
+      "schema": "grade",
+      "description": "Grades for a specific student"
+    },
+    "/auditLogs/{logId}": {
+      "schema": "auditLog",
+      "description": "Changes history"
+    },
+    "/users/{userId}": {
+      "schema": "appUser",
+      "description": "Users of the system"
+    }
+  }
+}

@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isApproved() {
+      return isSignedIn() && getUserData().isApproved == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserData().isAdmin == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 1. Validation Helpers
+    function isValidUser(data) {
+       return data.email is string && data.name is string
+           && data.isApproved is bool && data.isAdmin is bool;
+    }
+
+    function isValidStudent(data) {
+      return data.aluno is string && data.aluno.size() > 0 && data.aluno.size() <= 200
+          && data.ra is string && data.ra.size() <= 100
+          && data.status in ['PENDENTE', 'DISP. IMPRESSÃO', 'CERT. GERADO']
+          && (!('email' in data) || data.email is string)
+          && (!('telefone2' in data) || data.telefone2 is string);
+    }
+
+    function isValidGrade(data) {
+      return data.discipline is string && data.discipline.size() > 0
+          && data.score is string
+          && (!('area' in data) || data.area is string);
+    }
+
+    function isValidAuditLog(data) {
+      return data.studentId is string && data.userId == request.auth.uid;
+    }
+
+    // 2. Collection Rules
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId 
+                     && incoming().isAdmin == false && incoming().isApproved == false;
+      allow create: if isSignedIn() && request.auth.uid == userId 
+                     && (incoming().email == 'maykon.euro@gmail.com' || incoming().email == 'm.vascogonsalves@gmail.com')
+                     && incoming().isAdmin == true && incoming().isApproved == true;
+      allow update: if isAdmin();
+      // Permitir que o proprietário atualize seu próprio perfil para se tornar admin se necessário
+      allow update: if isSignedIn() && request.auth.uid == userId 
+                     && (request.auth.token.email == 'maykon.euro@gmail.com' || request.auth.token.email == 'm.vascogonsalves@gmail.com')
+                     && request.auth.token.email_verified == true;
+      allow update: if isSignedIn() && request.auth.uid == userId 
+                     && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email']);
+      allow delete: if isAdmin();
+    }
+
+    // Students collection
+    match /students/{studentId} {
+      allow read: if isApproved();
+      allow create: if isApproved() && isValidId(studentId) && isValidStudent(incoming())
+                       && (incoming().status == 'PENDENTE' || incoming().status == 'DISP. IMPRESSÃO')
+                       && (incoming().updatedAt == request.time || !('updatedAt' in incoming()));
+      allow update: if isApproved() && isValidId(studentId) && isValidStudent(incoming())
+                       && (incoming().updatedAt == request.time || !('updatedAt' in incoming()));
+      allow delete: if isAdmin(); 
+    }
+
+    // Grades subcollection
+    match /students/{studentId}/grades/{gradeId} {
+      allow read: if isApproved();
+      allow write: if isApproved() && isValidId(studentId) && isValidId(gradeId) && isValidGrade(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Audit Logs
+    match /auditLogs/{logId} {
+      allow read: if isApproved();
+      allow create: if isApproved() && isValidId(logId) && isValidAuditLog(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // App Settings
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
