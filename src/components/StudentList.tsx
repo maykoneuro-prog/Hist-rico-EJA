@@ -360,13 +360,9 @@ export default function StudentList({ students, loading }: { students: Student[]
                 </th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Unidade</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Período</th>
-                <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Situação</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">RA</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Turma</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Aluno</th>
-                <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Nascimento</th>
-                <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">CPF</th>
-                <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">RG</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Telefone</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Status</th>
                 <th className="px-3 py-3 border-b border-gray-100 text-right sticky right-0 bg-gray-50/80">Ações</th>
@@ -375,7 +371,7 @@ export default function StudentList({ students, loading }: { students: Student[]
             <tbody className="divide-y divide-gray-50">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="px-4 py-10 text-center text-gray-400 font-medium">
+                  <td colSpan={9} className="px-4 py-10 text-center text-gray-400 font-medium">
                     Sem registros para exibir
                   </td>
                 </tr>
@@ -392,13 +388,9 @@ export default function StudentList({ students, loading }: { students: Student[]
                     </td>
                     <td className="px-3 py-3 font-medium truncate max-w-[120px]" title={s.unidade}>{s.unidade}</td>
                     <td className="px-3 py-3 whitespace-nowrap">{s.periodo}</td>
-                    <td className="px-3 py-3 whitespace-nowrap">{s.situacao}</td>
                     <td className="px-3 py-3 tabular-nums">{s.ra}</td>
                     <td className="px-3 py-3 whitespace-nowrap">{s.turma}</td>
                     <td className="px-3 py-3 font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase whitespace-nowrap">{s.aluno}</td>
-                    <td className="px-3 py-3 whitespace-nowrap">{s.dataNascimento}</td>
-                    <td className="px-3 py-3 whitespace-nowrap tabular-nums">{s.cpf}</td>
-                    <td className="px-3 py-3 whitespace-nowrap tabular-nums">{s.rg}</td>
                     <td className="px-3 py-3 whitespace-nowrap tabular-nums">{s.telefone2 || '-'}</td>
                     <td className="px-3 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap ${
@@ -413,6 +405,17 @@ export default function StudentList({ students, loading }: { students: Student[]
                     </td>
                     <td className="px-3 py-3 text-right sticky right-0 bg-white group-hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-end gap-1">
+                        {s.telefone2 && (
+                          <a
+                            href={`https://wa.me/${s.telefone2.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded transition-all"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle size={14} />
+                          </a>
+                        )}
                         <button
                           onClick={() => setSelectedStudent(s)}
                           className="p-1.5 text-blue-600 hover:bg-blue-600 hover:text-white rounded transition-all"
