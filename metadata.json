@@ -1,6 +1,6 @@
 {
   "name": "Histórico EJA",
-  "description": "Sistema MVP para importação de alunos, complementação de dados e geração de históricos escolares em PDF.",
+  "description": "Sistema MVP para importação de alunos, complementação de dados e geração de históricos escolares em PDF. Inclui controle de acesso e gestão de status de usuários.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
