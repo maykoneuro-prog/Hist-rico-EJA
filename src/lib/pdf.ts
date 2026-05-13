@@ -21,6 +21,7 @@ export async function generateStudentPDF(data: Student | { student: Student, gra
   });
 
   const studentsToProcess = isBulk ? (data as { student: Student, grades: Grade[] }[]) : [{ student: data as Student, grades: individualGrades || [] }];
+  const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
   for (let i = 0; i < studentsToProcess.length; i++) {
     const { student, grades } = studentsToProcess[i];
@@ -72,42 +73,62 @@ export async function generateStudentPDF(data: Student | { student: Student, gra
       doc.setFontSize(7.5);
       doc.text(`Portaria: SEDUC Nº 4267 - D.O.E. de 30/06/2012 | Cadastro Escolar: P.000.219`, pageWidth / 2, currentY, { align: 'center' });
       currentY += 10;
-
-      // 2. Title Section (Título do Documento - Só se não tiver timbrado)
-      doc.setLineWidth(0.3);
-      doc.line(margin, currentY, pageWidth - margin, currentY);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.text('CERTIFICADO E HISTÓRICO ESCOLAR', pageWidth / 2, currentY + 6, { align: 'center' });
-      doc.setFontSize(9);
-      doc.text('ENSINO MÉDIO - EDUCAÇÃO DE JOVENS E ADULTOS', pageWidth / 2, currentY + 11, { align: 'center' });
-      doc.line(margin, currentY + 14, pageWidth - margin, currentY + 14);
-      
-      currentY += 20; 
     }
+
+    // 2. Title Section (Título do Documento - Barra Cinza)
+    const turma = (student.turma || '').toUpperCase();
+    let levelTitle = 'ENSINO MÉDIO';
+    if (turma.includes('EF') || turma.includes('AF')) {
+      levelTitle = 'ENSINO FUNDAMENTAL ANOS FINAIS';
+    } else if (turma.includes('EM')) {
+      levelTitle = 'ENSINO MÉDIO';
+    }
+
+    currentY -= 20; // Subir 2cm total
+    doc.setLineWidth(0.5);
+    doc.setFillColor(230, 230, 230);
+    const barWidth = pageWidth - (margin * 2) - 4.5; // Ajustado conforme pedido (metade do ajuste anterior)
+    const barX = margin + 1; // Trazer mais para a esquerda
+    doc.rect(barX, currentY, barWidth, 15, 'F');
+    doc.rect(barX, currentY, barWidth, 15, 'S');
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('CERTIFICADO E HISTÓRICO ESCOLAR', pageWidth / 2, currentY + 6, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`${levelTitle} - EDUCAÇÃO DE JOVENS E ADULTOS`, pageWidth / 2, currentY + 11, { align: 'center' });
+    
+    currentY += 22; 
 
     // 3. Statement Paragraph (Texto de certificação longo seguindo modelo Olga)
-    if (letterhead) {
-      currentY += 2; // Pequeno ajuste para afastar do fim do cabeçalho do timbrado
-    }
-    
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     
-    // Format date
-    const birthDate = (student.dataNascimento || '').split(' ')[0].split('-').reverse();
-    const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-    const formattedDay = birthDate[0] || '01';
-    const formattedMonthNum = parseInt(birthDate[1]);
-    const formattedMonth = months[isNaN(formattedMonthNum) ? 0 : formattedMonthNum - 1] || 'janeiro';
-    const formattedYear = birthDate[2] || '2000';
+    // Format date properly
+    let birthDateStr = student.dataNascimento || '';
+    if (birthDateStr) {
+      if (birthDateStr.includes('/')) {
+        const parts = birthDateStr.split('/');
+        const day = parts[0];
+        const monthNum = parseInt(parts[1]);
+        const month = months[monthNum - 1] || 'janeiro';
+        const year = parts[2]?.split(' ')[0];
+        birthDateStr = `${day} de ${month.toUpperCase()} de ${year}`;
+      } else if (birthDateStr.includes('-')) {
+        const parts = birthDateStr.split(' ')[0].split('-');
+        const year = parts[0];
+        const monthNum = parseInt(parts[1]);
+        const day = parts[2];
+        const month = months[monthNum - 1] || 'janeiro';
+        birthDateStr = `${day} de ${month.toUpperCase()} de ${year}`;
+      }
+    }
     
-    const birthDateStr = `${formattedDay} de ${formattedMonth.toUpperCase()} de ${formattedYear}`;
     const parentsStr = `${(student.pai || '').toUpperCase()} e ${(student.mae || '').toUpperCase()}`;
     const naturalidade = student.unidade?.toUpperCase().includes('CARUARU') ? 'CARUARU/PE' : 'RECIFE/PE';
     const completionYear = student.periodo?.split('/')[0] || '2024';
 
-    const statement = `Pelo presente Histórico Escolar, certificamos que ${(student.aluno || '').toUpperCase()}, filho (a) de ${parentsStr}, nascido (a) em ${birthDateStr}, natural de ${naturalidade}, nacionalidade brasileira, portador (a) do CPF nº ${student.cpf || '---'} e nº de identificação ${student.rg || '---'}, expedido pelo órgão SDS/PE, concluiu o Ensino Médio no ano de ${completionYear}, nos termos da Lei nº 9.394/96 de 20 de dezembro de 1996.`;
+    const statement = `Pelo presente Histórico Escolar, certificamos que ${(student.aluno || '').toUpperCase()}, filho (a) de ${parentsStr}, nascido (a) em ${birthDateStr}, natural de ${naturalidade}, nacionalidade brasileira, portador (a) do CPF nº ${student.cpf || '---'} e nº de identificação ${student.rg || '---'}, expedido pelo órgão SDS/PE, concluiu o ${levelTitle} no ano de ${completionYear}, nos termos da Lei nº 9.394/96 de 20 de dezembro de 1996.`;
     
     doc.text(statement, 18, currentY, { 
       align: 'justify',
@@ -152,8 +173,7 @@ export async function generateStudentPDF(data: Student | { student: Student, gra
           row.push(grade.hours.toString());
           const formattedScore = parseFloat((grade.score || '0').replace(',', '.')).toFixed(2).replace('.', ',');
           row.push(formattedScore);
-          const situationText = grade.situation === 'Aprovado' ? 'Competência Certificada' : grade.situation;
-          row.push(situationText);
+          row.push(grade.situation);
           tableBody.push(row);
         });
       }

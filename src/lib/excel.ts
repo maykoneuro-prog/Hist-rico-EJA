@@ -4,7 +4,7 @@ import { Student } from '../types';
 export const excelService = {
   downloadTemplate() {
     const data = [
-      ['UNIDADE', 'PERIODO', 'SITUACAO', 'RA', 'TURMA', 'ALUNO', 'DATA NASCIMENTO', 'CPF', 'RG', 'TELEFONE2', 'EMAIL', 'MAE', 'PAI']
+      ['UNIDADE', 'PERIODO', 'RA', 'TURMA', 'ALUNO', 'DATA NASCIMENTO', 'CPF', 'RG', 'TELEFONE2', 'EMAIL', 'MAE', 'PAI']
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -53,7 +53,6 @@ export const mapExcelToStudent = (item: any) => {
   return {
     unidade: item['UNIDADE']?.toString() || item['Escola']?.toString() || '',
     periodo: item['PERIODO']?.toString() || item['Ano']?.toString() || '',
-    situacao: item['SITUACAO']?.toString() || item['SITUAÇÃO']?.toString() || item['SITUAÇÃO MATRICULA']?.toString() || '',
     ra: item['RA']?.toString() || '',
     turma: item['TURMA']?.toString() || '',
     aluno: item['ALUNO']?.toString() || '',
@@ -64,5 +63,8 @@ export const mapExcelToStudent = (item: any) => {
     email: item['EMAIL']?.toString() || '',
     mae: item['MAE']?.toString() || '',
     pai: item['PAI']?.toString() || '',
+    documentacaoEntregue: false,
+    certificadoEnviado: false,
+    dataEnvioCertificado: null,
   };
 };

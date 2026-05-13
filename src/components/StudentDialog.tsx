@@ -51,8 +51,19 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
     load();
   }, [student.id]);
 
-  const handleUpdateStudent = (field: keyof Student, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleUpdateStudent = (field: keyof Student, value: any) => {
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // If certificadoEnviado is true and was false, set date
+      if (field === 'certificadoEnviado' && value === true && !prev.certificadoEnviado) {
+        newData.dataEnvioCertificado = new Date().toISOString();
+      } else if (field === 'certificadoEnviado' && value === false) {
+        newData.dataEnvioCertificado = null;
+      }
+      
+      return newData;
+    });
   };
 
   const calculateSituation = (score: string) => {
@@ -95,12 +106,14 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
         ra: formData.ra,
         unidade: formData.unidade,
         periodo: formData.periodo,
-        situacao: formData.situacao,
         turma: formData.turma,
         turno: formData.turno,
         dataNascimento: formData.dataNascimento,
         cpf: formData.cpf,
         rg: formData.rg,
+        documentacaoEntregue: formData.documentacaoEntregue || false,
+        certificadoEnviado: formData.certificadoEnviado || false,
+        dataEnvioCertificado: formData.dataEnvioCertificado || null,
       });
       await gradeService.saveGrades(student.id, grades);
       onClose();
@@ -136,12 +149,14 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
         ra: formData.ra,
         unidade: formData.unidade,
         periodo: formData.periodo,
-        situacao: formData.situacao,
         turma: formData.turma,
         turno: formData.turno,
         dataNascimento: formData.dataNascimento,
         cpf: formData.cpf,
         rg: formData.rg,
+        documentacaoEntregue: formData.documentacaoEntregue || false,
+        certificadoEnviado: formData.certificadoEnviado || false,
+        dataEnvioCertificado: formData.dataEnvioCertificado || null,
       });
       await gradeService.saveGrades(student.id, grades);
       onClose();
@@ -178,12 +193,12 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InputField label="Nome do Pai" value={formData.pai} onChange={(v) => handleUpdateStudent('pai', v)} />
                 <InputField label="Nome da Mãe" value={formData.mae} onChange={(v) => handleUpdateStudent('mae', v)} />
-                <InputField label="Situação" value={formData.situacao} onChange={(v) => handleUpdateStudent('situacao', v)} />
                 <InputField label="Data Nascimento" value={formData.dataNascimento} onChange={(v) => handleUpdateStudent('dataNascimento', v)} />
                 <InputField label="CPF" value={formData.cpf} onChange={(v) => handleUpdateStudent('cpf', v)} />
                 <InputField label="RG" value={formData.rg} onChange={(v) => handleUpdateStudent('rg', v)} />
               </div>
             </section>
+
 
             <section>
               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Dados Escolares</h4>
@@ -293,7 +308,44 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
           </div>
 
           {/* Side Info Panel */}
-          <div className="w-[280px] bg-gray-50/50 p-6 flex flex-col">
+          <div className="w-[280px] bg-gray-50/50 p-6 flex flex-col overflow-y-auto">
+            <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Rastreadores</h4>
+            
+            <div className="space-y-3 mb-8">
+              <div 
+                className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${formData.documentacaoEntregue ? 'bg-emerald-50 border-emerald-100' : 'bg-white border-gray-100 hover:border-emerald-200'}`}
+                onClick={() => handleUpdateStudent('documentacaoEntregue', !formData.documentacaoEntregue)}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-lg ${formData.documentacaoEntregue ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                    <FileText size={14} />
+                  </div>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.documentacaoEntregue ? 'text-emerald-700' : 'text-gray-500'}`}>Documentação</span>
+                </div>
+                <div className={`w-3.5 h-3.5 rounded-full border-2 ${formData.documentacaoEntregue ? 'bg-emerald-500 border-emerald-500' : 'bg-white border-gray-200'}`} />
+              </div>
+
+              <div 
+                className={`p-3 rounded-xl border flex flex-col gap-2 cursor-pointer transition-all ${formData.certificadoEnviado ? 'bg-blue-50 border-blue-100' : 'bg-white border-gray-100 hover:border-blue-200'}`}
+                onClick={() => handleUpdateStudent('certificadoEnviado', !formData.certificadoEnviado)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${formData.certificadoEnviado ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                      <CheckCircle size={14} />
+                    </div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${formData.certificadoEnviado ? 'text-blue-700' : 'text-gray-500'}`}>Enviado</span>
+                  </div>
+                  <div className={`w-3.5 h-3.5 rounded-full border-2 ${formData.certificadoEnviado ? 'bg-blue-500 border-blue-500' : 'bg-white border-gray-200'}`} />
+                </div>
+                {formData.certificadoEnviado && formData.dataEnvioCertificado && (
+                  <p className="text-[9px] text-blue-400 font-bold uppercase tracking-widest pl-8">
+                    EM: {new Date(formData.dataEnvioCertificado).toLocaleDateString('pt-BR')}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Status & Ações</h4>
             
             <div className="space-y-4">

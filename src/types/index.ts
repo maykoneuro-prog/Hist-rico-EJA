@@ -18,7 +18,6 @@ export interface Student {
   id: string;
   unidade: string;
   periodo: string;
-  situacao: string;
   ra: string;
   turma: string;
   turno?: string;
@@ -31,6 +30,9 @@ export interface Student {
   pai: string;
   mae: string;
   status: StudentStatus;
+  documentacaoEntregue: boolean;
+  certificadoEnviado: boolean;
+  dataEnvioCertificado?: any;
   updatedAt: any;
   lastModifiedBy: string;
   lastModifiedByName: string;

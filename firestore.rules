@@ -44,15 +44,18 @@ service cloud.firestore {
     function isValidStudent(data) {
       return data.aluno is string && data.aluno.size() > 0 && data.aluno.size() <= 200
           && data.ra is string && data.ra.size() <= 100
-          && data.status in ['PENDENTE', 'DISP. IMPRESSÃO', 'CERT. GERADO']
+          && data.status in ['PENDENTE', 'DISP_IMPRESSAO', 'CERT_GERADO']
           && (!('email' in data) || data.email is string)
-          && (!('telefone2' in data) || data.telefone2 is string);
+          && (!('telefone2' in data) || data.telefone2 is string)
+          && (!('documentacaoEntregue' in data) || data.documentacaoEntregue is bool)
+          && (!('certificadoEnviado' in data) || data.certificadoEnviado is bool);
     }
 
     function isValidGrade(data) {
       return data.discipline is string && data.discipline.size() > 0
           && data.score is string
-          && (!('area' in data) || data.area is string);
+          && (!('area' in data) || data.area is string)
+          && (!('situation' in data) || data.situation is string);
     }
 
     function isValidAuditLog(data) {
@@ -83,7 +86,7 @@ service cloud.firestore {
     match /students/{studentId} {
       allow read: if isApproved();
       allow create: if isApproved() && isValidId(studentId) && isValidStudent(incoming())
-                       && (incoming().status == 'PENDENTE' || incoming().status == 'DISP. IMPRESSÃO')
+                       && (incoming().status == 'PENDENTE' || incoming().status == 'DISP_IMPRESSAO')
                        && (incoming().updatedAt == request.time || !('updatedAt' in incoming()));
       allow update: if isApproved() && isValidId(studentId) && isValidStudent(incoming())
                        && (incoming().updatedAt == request.time || !('updatedAt' in incoming()));

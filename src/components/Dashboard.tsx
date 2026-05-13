@@ -20,6 +20,8 @@ export default function Dashboard({ students, loading }: { students: Student[], 
       pending: filtered.filter(s => s.status === StudentStatus.PENDENTE).length,
       ready: filtered.filter(s => s.status === StudentStatus.DISP_IMPRESSAO).length,
       generated: filtered.filter(s => s.status === StudentStatus.CERT_GERADO).length,
+      docs: filtered.filter(s => s.documentacaoEntregue).length,
+      sent: filtered.filter(s => s.certificadoEnviado).length,
     };
 
     const cData = [
@@ -104,6 +106,10 @@ export default function Dashboard({ students, loading }: { students: Student[], 
           <StatCard title="Disp. Impressão" value={stats.ready} color="text-blue-500" />
           <div className="w-px bg-gray-200 h-10 shrink-0" />
           <StatCard title="Cert. Gerado" value={stats.generated} color="text-emerald-500" />
+          <div className="w-px bg-gray-200 h-10 shrink-0" />
+          <StatCard title="Doc. Entregue" value={stats.docs} color="text-emerald-700" />
+          <div className="w-px bg-gray-200 h-10 shrink-0" />
+          <StatCard title="Enviados" value={stats.sent} color="text-blue-700" />
         </div>
         <div className="hidden lg:flex items-center gap-2">
           <BarChart3 className="text-gray-400" size={20} />

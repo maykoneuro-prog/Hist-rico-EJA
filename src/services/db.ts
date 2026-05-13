@@ -244,6 +244,9 @@ export const studentService = {
           ra,
           unidade,
           status: data.status || StudentStatus.PENDENTE,
+          documentacaoEntregue: data.documentacaoEntregue || false,
+          certificadoEnviado: data.certificadoEnviado || false,
+          dataEnvioCertificado: data.dataEnvioCertificado || null,
           updatedAt: serverTimestamp(),
           lastModifiedBy: auth.currentUser?.uid || 'system',
           lastModifiedByName: auth.currentUser?.displayName || 'Importação'
@@ -274,6 +277,9 @@ export const studentService = {
       const studentData = {
         ...data,
         status: StudentStatus.PENDENTE,
+        documentacaoEntregue: false,
+        certificadoEnviado: false,
+        dataEnvioCertificado: null,
         updatedAt: serverTimestamp(),
       };
       await setDoc(docRef, studentData);
