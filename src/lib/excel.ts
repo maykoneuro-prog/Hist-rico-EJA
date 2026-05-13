@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { Student } from '../types';
+import { Student, AppUser, AuditLog } from '../types';
 
 export const excelService = {
   downloadTemplate() {
@@ -32,20 +32,81 @@ export const excelService = {
     });
   },
 
-  exportBackup(students: Student[], grades: any[]) {
-    const studentData = students.map(s => ({
-      ...s,
-      updatedAt: s.updatedAt?.toDate?.()?.toLocaleString() || s.updatedAt
-    }));
-    
+  exportBackup(students: Student[], grades: any[], users: AppUser[], auditLogs: AuditLog[]) {
     const wb = XLSX.utils.book_new();
+
+    // 1. Sheet: Alunos
+    const studentData = students.map(s => ({
+      'ID Único': s.id,
+      'Unidade': s.unidade,
+      'Ano Conclusão': s.anoConclusao || s.periodo,
+      'Período': s.periodo,
+      'RA': s.ra,
+      'Turma': s.turma,
+      'Aluno': s.aluno,
+      'Data Nascimento': s.dataNascimento,
+      'CPF': s.cpf,
+      'RG': s.rg,
+      'Telefone': s.telefone2 || '',
+      'Email': s.email || '',
+      'Mãe': s.mae,
+      'Pai': s.pai,
+      'Status': s.status,
+      'Doc. Entregue': s.documentacaoEntregue ? 'SIM' : 'NÃO',
+      'Cert. Enviado': s.certificadoEnviado ? 'SIM' : 'NÃO',
+      'Data Envio Cert.': s.dataEnvioCertificado ? (s.dataEnvioCertificado.toDate?.()?.toLocaleString() || s.dataEnvioCertificado) : '',
+      'Última Modificação': s.updatedAt?.toDate?.()?.toLocaleString() || s.updatedAt,
+      'Modificado Por': s.lastModifiedByName || s.lastModifiedBy || ''
+    }));
     const wsStudents = XLSX.utils.json_to_sheet(studentData);
-    const wsGrades = XLSX.utils.json_to_sheet(grades);
-    
     XLSX.utils.book_append_sheet(wb, wsStudents, 'Alunos');
+
+    // 2. Sheet: Notas
+    const gradeData = grades.map(g => ({
+      'ID Aluno': g.studentId,
+      'Nome Aluno': g.aluno,
+      'Disciplina': g.discipline,
+      'Nota/Frequência': g.score,
+      'Área': g.area,
+      'Carga Horária': g.hours,
+      'Situação': g.situation
+    }));
+    const wsGrades = XLSX.utils.json_to_sheet(gradeData);
     XLSX.utils.book_append_sheet(wb, wsGrades, 'Notas');
+
+    // 3. Sheet: Usuários (Sistema)
+    const userData = users.map(u => ({
+      'UID': u.uid,
+      'Nome': u.name,
+      'Email': u.email,
+      'Papel': u.role,
+      'Admin': u.isAdmin ? 'SIM' : 'NÃO',
+      'Aprovado': u.isApproved ? 'SIM' : 'NÃO',
+      'Ativo': u.isActive !== false ? 'SIM' : 'NÃO',
+      'Criado em': u.createdAt?.toDate?.()?.toLocaleString() || u.createdAt
+    }));
+    const wsUsers = XLSX.utils.json_to_sheet(userData);
+    XLSX.utils.book_append_sheet(wb, wsUsers, 'Operadores');
+
+    // 4. Sheet: Auditoria
+    const logData = auditLogs.map(l => ({
+      'Data/Hora': l.timestamp?.toDate?.()?.toLocaleString() || l.timestamp,
+      'Operador': l.userName || l.userId,
+      'Ação': l.action,
+      'ID Aluno': l.studentId
+    }));
+    const wsLogs = XLSX.utils.json_to_sheet(logData);
+    XLSX.utils.book_append_sheet(wb, wsLogs, 'Logs de Auditoria');
     
-    XLSX.writeFile(wb, `backup_sistema_${new Date().toISOString().split('T')[0]}.xlsx`);
+    // Auto-size columns (basic approach)
+    [wsStudents, wsGrades, wsUsers, wsLogs].forEach(ws => {
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      const cols = [];
+      for (let i = 0; i <= range.e.c; i++) cols.push({ wch: 20 });
+      ws['!cols'] = cols;
+    });
+
+    XLSX.writeFile(wb, `backup_completo_eja_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 };
 

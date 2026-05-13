@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { studentService, gradeService, settingsService } from '../services/db';
+import { studentService, gradeService, settingsService, userService, auditLogService } from '../services/db';
 import { Student, StudentStatus, Letterhead } from '../types';
 import { 
   Search, 
@@ -99,13 +99,33 @@ export default function StudentList({ students, loading }: { students: Student[]
     }
   };
 
+  const [isBackupBusy, setIsBackupBusy] = useState(false);
+
   const handleExportBackup = async () => {
-    const allGrades: any[] = [];
-    for (const s of students) {
-      const grades = await gradeService.getByStudentId(s.id);
-      if (grades) grades.forEach(g => allGrades.push({ studentId: s.id, aluno: s.aluno, ...g }));
+    setIsBackupBusy(true);
+    try {
+      const studentIds = students.map(s => s.id);
+      
+      // 1. Fetch grades in optimized batches
+      const allGradesRaw = await gradeService.getAllGradesForStudents(studentIds);
+      const allGrades = allGradesRaw.map(g => {
+        const student = students.find(s => s.id === g.studentId);
+        return { ...g, aluno: student?.aluno || 'N/A' };
+      });
+
+      // 2. Fetch system users
+      const users = await userService.getAll() || [];
+
+      // 3. Fetch audit logs
+      const auditLogs = await auditLogService.getAll() || [];
+      
+      excelService.exportBackup(students, allGrades, users, auditLogs);
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao gerar backup. Tente novamente.');
+    } finally {
+      setIsBackupBusy(false);
     }
-    excelService.exportBackup(students, allGrades);
   };
 
   const currentStudentSchool = targetStudentForReport?.unidade.toUpperCase() || (selectedStudents.length > 0 ? students.find(s => s.id === selectedStudents[0])?.unidade.toUpperCase() : '') || '';
@@ -260,9 +280,11 @@ export default function StudentList({ students, loading }: { students: Student[]
 
           <button
             onClick={handleExportBackup}
-            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-semibold text-xs border border-gray-200"
+            disabled={isBackupBusy}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-semibold text-xs border border-gray-200 disabled:opacity-50"
           >
-            <FileSpreadsheet size={14} /> Backup Global
+            {isBackupBusy ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />}
+            {isBackupBusy ? 'Processando...' : 'Backup Global'}
           </button>
 
           {selectedStudents.length > 0 && (

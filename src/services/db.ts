@@ -488,6 +488,19 @@ export const studentService = {
   }
 };
 
+export const auditLogService = {
+  async getAll() {
+    const path = 'auditLogs';
+    try {
+      const q = query(collection(db, path), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+    }
+  }
+};
+
 export const gradeService = {
   async getByStudentId(studentId: string) {
     const path = `students/${studentId}/grades`;
@@ -498,6 +511,22 @@ export const gradeService = {
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, path);
     }
+  },
+
+  async getAllGradesForStudents(studentIds: string[]) {
+    const batchSize = 10;
+    const allGrades: (Grade & { studentId: string })[] = [];
+    
+    for (let i = 0; i < studentIds.length; i += batchSize) {
+      const chunk = studentIds.slice(i, i + batchSize);
+      const promises = chunk.map(id => this.getByStudentId(id).then(grades => 
+        grades?.map(g => ({ ...g, studentId: id })) || []
+      ));
+      const results = await Promise.all(promises);
+      results.forEach(grades => allGrades.push(...grades));
+    }
+    
+    return allGrades;
   },
 
   async saveGrades(studentId: string, grades: Grade[]) {
