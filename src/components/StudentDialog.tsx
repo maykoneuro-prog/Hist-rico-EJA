@@ -286,13 +286,13 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
                                   onChange={(e) => handleSituationChange(gradeIdx, e.target.value)}
                                   className={`w-full bg-white border border-gray-100 rounded px-1 py-1 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-blue-500 appearance-none text-center cursor-pointer ${
                                     grade.situation === 'Aprovado' ? 'text-emerald-600' : 
-                                    grade.situation === 'Competência Certificada' ? 'text-blue-600' :
+                                    grade.situation === 'C. Certificada' ? 'text-blue-600' :
                                     grade.situation === 'Reprovado' ? 'text-red-600' : 'text-gray-400'
                                   }`}
                                 >
                                   <option value="">-</option>
                                   <option value="Aprovado">Aprovado</option>
-                                  <option value="Competência Certificada">C. Certificada</option>
+                                  <option value="C. Certificada">C. Certificada</option>
                                   <option value="Reprovado">Reprovado</option>
                                 </select>
                               </td>
