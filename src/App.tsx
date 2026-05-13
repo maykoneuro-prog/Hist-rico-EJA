@@ -68,6 +68,33 @@ export default function App() {
     );
   }
 
+  // Inactive Account Screen
+  if (appUser && appUser.isActive === false) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center animate-in fade-in zoom-in duration-300">
+          <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShieldAlert className="text-red-600" size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Inativado</h2>
+          <p className="text-gray-500 text-sm mb-8">
+            Seu acesso ao sistema foi temporariamente desativado por um administrador.
+          </p>
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-8 text-xs font-medium text-red-700 text-left flex gap-3">
+            <Clock className="shrink-0" size={16} />
+            <span>Caso acredite ser um erro, entre em contato com a administração.</span>
+          </div>
+          <button
+            onClick={() => signOut(auth)}
+            className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm tracking-wide hover:bg-gray-800 transition-all active:scale-95"
+          >
+            Sair da Conta
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden">
       {/* Sidebar */}

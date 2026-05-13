@@ -63,5 +63,6 @@ export interface AppUser {
   role: string;
   isAdmin: boolean;
   isApproved: boolean;
+  isActive?: boolean;
   createdAt: any;
 }

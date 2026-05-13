@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { userService, settingsService, studentService } from '../services/db';
 import { AppUser, Letterhead } from '../types';
-import { UserPlus, Shield, CheckCircle2, Trash2, UserCheck, FileImage, Upload, Eye, ShieldAlert } from 'lucide-react';
+import { UserPlus, Shield, CheckCircle2, Trash2, UserCheck, FileImage, Upload, Eye, ShieldAlert, UserX } from 'lucide-react';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -74,13 +74,22 @@ export default function UserManagement() {
   const handleApprove = async (uid: string) => {
     if (!confirm('Deseja aprovar este usuário?')) return;
     await userService.approve(uid);
-    setUsers(users.map(u => u.uid === uid ? { ...u, isApproved: true } : u));
+    setUsers(users.map(u => u.uid === uid ? { ...u, isApproved: true, isActive: true } : u));
   };
 
   const handleElevate = async (uid: string) => {
     if (!confirm('Deseja tornar este usuário um administrador?')) return;
     await userService.elevateToAdmin(uid);
     setUsers(users.map(u => u.uid === uid ? { ...u, isAdmin: true, isApproved: true, role: 'ADMIN' } : u));
+  };
+
+  const handleToggleStatus = async (user: AppUser) => {
+    const isCurrentlyActive = user.isActive !== false;
+    const action = isCurrentlyActive ? 'inativar' : 'ativar';
+    if (!confirm(`Deseja ${action} este usuário?`)) return;
+    
+    await userService.toggleStatus(user.uid, isCurrentlyActive);
+    setUsers(users.map(u => u.uid === user.uid ? { ...u, isActive: !isCurrentlyActive } : u));
   };
 
   const handleDelete = async (uid: string) => {
@@ -180,13 +189,17 @@ export default function UserManagement() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          {user.isApproved ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
-                              <CheckCircle2 size={10} /> Ativo
-                            </span>
-                          ) : (
+                          {!user.isApproved ? (
                             <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-amber-100">
                               Aguarda Aprovação
+                            </span>
+                          ) : user.isActive === false ? (
+                            <span className="inline-flex items-center gap-1 text-red-600 bg-red-50 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-red-100">
+                              <UserX size={10} /> Inativo
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
+                              <CheckCircle2 size={10} /> Ativo
                             </span>
                           )}
                         </td>
@@ -208,14 +221,25 @@ export default function UserManagement() {
                             {user.isApproved && !user.isAdmin && (
                               <button 
                                 onClick={() => handleElevate(user.uid)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors title='Tornar Admin'"
+                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                title="Tornar Admin"
                               >
                                 <Shield size={16} />
+                              </button>
+                            )}
+                            {user.isApproved && (
+                              <button 
+                                onClick={() => handleToggleStatus(user)}
+                                className={`p-1.5 rounded-lg transition-colors ${user.isActive === false ? 'text-emerald-600 hover:bg-emerald-100' : 'text-amber-600 hover:bg-amber-100'}`}
+                                title={user.isActive === false ? "Ativar Usuário" : "Inativar Usuário"}
+                              >
+                                {user.isActive === false ? <UserCheck size={16} /> : <UserX size={16} />}
                               </button>
                             )}
                             <button 
                               onClick={() => handleDelete(user.uid)}
                               className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Excluir Acesso"
                             >
                               <Trash2 size={16} />
                             </button>

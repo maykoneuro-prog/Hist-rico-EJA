@@ -98,6 +98,7 @@ export const userService = {
         role: isMasterEmail ? 'ADMIN' : 'USER',
         isAdmin: isMasterEmail,
         isApproved: isMasterEmail,
+        isActive: true,
         createdAt: serverTimestamp()
       };
 
@@ -135,6 +136,7 @@ export const userService = {
     try {
       await updateDoc(doc(db, 'users', uid), { 
         isApproved: true,
+        isActive: true,
         role: 'USER'
       });
     } catch (error) {
@@ -161,6 +163,17 @@ export const userService = {
       await deleteDoc(doc(db, 'users', uid));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
+    }
+  },
+
+  async toggleStatus(uid: string, currentStatus: boolean) {
+    const path = `users/${uid}`;
+    try {
+      await updateDoc(doc(db, 'users', uid), { 
+        isActive: !currentStatus 
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
     }
   }
 };
