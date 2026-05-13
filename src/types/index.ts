@@ -56,6 +56,7 @@ export interface AuditLog {
   timestamp: any;
 }
 
+// v1.0.1 - Sync trigger
 export interface AppUser {
   uid: string;
   name: string;
