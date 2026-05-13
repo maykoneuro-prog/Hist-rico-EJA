@@ -126,7 +126,7 @@ export async function generateStudentPDF(data: Student | { student: Student, gra
     
     const parentsStr = `${(student.pai || '').toUpperCase()} e ${(student.mae || '').toUpperCase()}`;
     const naturalidade = student.unidade?.toUpperCase().includes('CARUARU') ? 'CARUARU/PE' : 'RECIFE/PE';
-    const completionYear = student.periodo?.split('/')[0] || '2024';
+    const completionYear = student.anoConclusao || '2024';
 
     const statement = `Pelo presente Histórico Escolar, certificamos que ${(student.aluno || '').toUpperCase()}, filho (a) de ${parentsStr}, nascido (a) em ${birthDateStr}, natural de ${naturalidade}, nacionalidade brasileira, portador (a) do CPF nº ${student.cpf || '---'} e nº de identificação ${student.rg || '---'}, expedido pelo órgão SDS/PE, concluiu o ${levelTitle} no ano de ${completionYear}, nos termos da Lei nº 9.394/96 de 20 de dezembro de 1996.`;
     
@@ -301,10 +301,9 @@ export async function generateDeclarationPDF(data: Student | Student[], letterhe
     const unitName = student.unidade?.replace(/^SESI\s+/i, '').toUpperCase() || 'SESI';
     const studentName = (student.aluno || '').toUpperCase();
     const parentNames = `${(student.pai || '').toUpperCase()} e ${(student.mae || '').toUpperCase()}`;
-    const courseInfo = `NOVA EJA - ENSINO MÉDIO – ${student.periodo?.split('/')[0] || '2026'}.1, TURMA ${student.turma || 'A'}`;
-    const turnInfo = student.turno || 'noite';
-
-    const declarationText = `Declaramos para os devidos fins que o (a) estudante ${studentName}, filho de ${parentNames}, nascido (a) em ${formattedDate}, natural de SALGUEIRO/PE, portador (a) do CPF: ${student.cpf}, está devidamente matriculado (a) na turma ${courseInfo}, com aulas no turno da ${turnInfo}, na modalidade da Educação de Jovens e Adultos, nesta instituição de ensino até a emissão deste documento.`;
+    const courseInfo = `NOVA EJA - ENSINO MÉDIO – ${student.anoConclusao || '2026'}.1, TURMA ${student.turma || 'A'}`;
+    
+    const declarationText = `Declaramos para os devidos fins que o (a) estudante ${studentName}, filho de ${parentNames}, nascido (a) em ${formattedDate}, natural de SALGUEIRO/PE, portador (a) do CPF: ${student.cpf}, está devidamente matriculado (a) na turma ${courseInfo}, na modalidade da Educação de Jovens e Adultos, nesta instituição de ensino até a emissão deste documento.`;
 
     doc.text(declarationText, margin, currentY, { align: 'justify', maxWidth: pageWidth - (margin * 2), lineHeightFactor: 1.5 });
     currentY += 40;

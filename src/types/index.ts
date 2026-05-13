@@ -20,7 +20,7 @@ export interface Student {
   periodo: string;
   ra: string;
   turma: string;
-  turno?: string;
+  anoConclusao: string;
   aluno: string;
   dataNascimento: string;
   cpf: string;

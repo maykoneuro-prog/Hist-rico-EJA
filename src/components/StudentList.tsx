@@ -23,7 +23,7 @@ import StudentDialog from './StudentDialog';
 export default function StudentList({ students, loading }: { students: Student[], loading: boolean }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('');
-  const [filterPeriodo, setFilterPeriodo] = useState('');
+  const [filterAnoConclusao, setFilterAnoConclusao] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [importing, setImporting] = useState(false);
@@ -51,10 +51,10 @@ export default function StudentList({ students, loading }: { students: Student[]
                           (s.ra?.includes(searchTerm) || '') || 
                           (s.cpf?.includes(searchTerm) || '');
       const matchUnidade = !filterUnidade || s.unidade === filterUnidade;
-      const matchPeriodo = !filterPeriodo || s.periodo === filterPeriodo;
-      return matchSearch && matchUnidade && matchPeriodo;
+      const matchAnoConclusao = !filterAnoConclusao || s.anoConclusao === filterAnoConclusao;
+      return matchSearch && matchUnidade && matchAnoConclusao;
     });
-  }, [students, searchTerm, filterUnidade, filterPeriodo]);
+  }, [students, searchTerm, filterUnidade, filterAnoConclusao]);
 
   const toggleSelectAll = () => {
     if (selectedStudents.length === filteredStudents.length) {
@@ -71,7 +71,7 @@ export default function StudentList({ students, loading }: { students: Student[]
   };
 
   const unidades = useMemo(() => Array.from(new Set(students.map(s => s.unidade))), [students]);
-  const periodos = useMemo(() => Array.from(new Set(students.map(s => s.periodo))), [students]);
+  const anosConclusao = useMemo(() => Array.from(new Set(students.map(s => s.anoConclusao || s.periodo))), [students]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -336,12 +336,12 @@ export default function StudentList({ students, loading }: { students: Student[]
             </select>
             
             <select
-              value={filterPeriodo}
-              onChange={(e) => setFilterPeriodo(e.target.value)}
+              value={filterAnoConclusao}
+              onChange={(e) => setFilterAnoConclusao(e.target.value)}
               className="min-w-[100px] bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-blue-500 outline-none"
             >
               <option value="">Anos</option>
-              {periodos.map(p => <option key={p} value={p}>{p}</option>)}
+              {anosConclusao.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
         </div>
@@ -359,7 +359,7 @@ export default function StudentList({ students, loading }: { students: Student[]
                   />
                 </th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Unidade</th>
-                <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Período</th>
+                <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Ano Concl.</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">RA</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Turma</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Aluno</th>
@@ -387,7 +387,7 @@ export default function StudentList({ students, loading }: { students: Student[]
                       />
                     </td>
                     <td className="px-3 py-3 font-medium truncate max-w-[120px]" title={s.unidade}>{s.unidade}</td>
-                    <td className="px-3 py-3 whitespace-nowrap">{s.periodo}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">{s.anoConclusao || s.periodo}</td>
                     <td className="px-3 py-3 tabular-nums">{s.ra}</td>
                     <td className="px-3 py-3 whitespace-nowrap">{s.turma}</td>
                     <td className="px-3 py-3 font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase whitespace-nowrap">{s.aluno}</td>

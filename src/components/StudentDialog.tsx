@@ -107,7 +107,7 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
         unidade: formData.unidade,
         periodo: formData.periodo,
         turma: formData.turma,
-        turno: formData.turno,
+        anoConclusao: formData.anoConclusao,
         dataNascimento: formData.dataNascimento,
         cpf: formData.cpf,
         rg: formData.rg,
@@ -150,7 +150,7 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
         unidade: formData.unidade,
         periodo: formData.periodo,
         turma: formData.turma,
-        turno: formData.turno,
+        anoConclusao: formData.anoConclusao,
         dataNascimento: formData.dataNascimento,
         cpf: formData.cpf,
         rg: formData.rg,
@@ -205,7 +205,7 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <InputField label="Período" value={formData.periodo || ''} onChange={(v) => handleUpdateStudent('periodo', v)} />
                 <InputField label="Turma" value={formData.turma || ''} onChange={(v) => handleUpdateStudent('turma', v)} />
-                <InputField label="Turno" value={formData.turno || ''} onChange={(v) => handleUpdateStudent('turno', v)} />
+                <InputField label="Ano de Conclusão" value={formData.anoConclusao || ''} onChange={(v) => handleUpdateStudent('anoConclusao', v)} />
                 <InputField label="RA" value={formData.ra || ''} onChange={(v) => handleUpdateStudent('ra', v)} />
               </div>
             </section>

@@ -4,7 +4,7 @@ import { Student } from '../types';
 export const excelService = {
   downloadTemplate() {
     const data = [
-      ['UNIDADE', 'PERIODO', 'RA', 'TURMA', 'ALUNO', 'DATA NASCIMENTO', 'CPF', 'RG', 'TELEFONE2', 'EMAIL', 'MAE', 'PAI']
+      ['UNIDADE', 'PERIODO', 'RA', 'TURMA', 'ALUNO', 'DATA NASCIMENTO', 'CPF', 'RG', 'TELEFONE2', 'EMAIL', 'MAE', 'PAI', 'ANO CONCLUSAO']
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -63,6 +63,7 @@ export const mapExcelToStudent = (item: any) => {
     email: item['EMAIL']?.toString() || '',
     mae: item['MAE']?.toString() || '',
     pai: item['PAI']?.toString() || '',
+    anoConclusao: item['ANO CONCLUSAO']?.toString() || item['PERIODO']?.toString() || '',
     documentacaoEntregue: false,
     certificadoEnviado: false,
     dataEnvioCertificado: null,
