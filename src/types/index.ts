@@ -21,6 +21,7 @@ export interface Student {
   ra: string;
   turma: string;
   anoConclusao: string;
+  nivel: 'medio' | 'fundamental';
   aluno: string;
   dataNascimento: string;
   cpf: string;

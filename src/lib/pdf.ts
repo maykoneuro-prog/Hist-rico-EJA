@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Student, Grade } from '../types';
-import { EJA_CURRICULAR_STRUCTURE } from '../constants';
+import { getCurricularStructure } from '../constants';
 
 async function loadPDFImage(url: string): Promise<HTMLImageElement> {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -76,13 +76,7 @@ export async function generateStudentPDF(data: Student | { student: Student, gra
     }
 
     // 2. Title Section (Título do Documento - Barra Cinza)
-    const turma = (student.turma || '').toUpperCase();
-    let levelTitle = 'ENSINO MÉDIO';
-    if (turma.includes('EF') || turma.includes('AF')) {
-      levelTitle = 'ENSINO FUNDAMENTAL ANOS FINAIS';
-    } else if (turma.includes('EM')) {
-      levelTitle = 'ENSINO MÉDIO';
-    }
+    const levelTitle = student.nivel === 'fundamental' ? 'ENSINO FUNDAMENTAL ANOS FINAIS' : 'ENSINO MÉDIO';
 
     currentY -= 20; // Subir 2cm total
     doc.setLineWidth(0.5);
@@ -139,6 +133,7 @@ export async function generateStudentPDF(data: Student | { student: Student, gra
     currentY += 18;
 
     // 4. Grades Table
+    const structure = getCurricularStructure(student.nivel);
     const grouped: Record<string, Grade[]> = {};
     grades.forEach(g => {
       if (!grouped[g.area]) grouped[g.area] = [];
@@ -146,7 +141,7 @@ export async function generateStudentPDF(data: Student | { student: Student, gra
     });
 
     const tableBody: any[] = [];
-    EJA_CURRICULAR_STRUCTURE.forEach(areaConfig => {
+    structure.forEach(areaConfig => {
       const items = grouped[areaConfig.area];
       if (items) {
         const sortedItems = [...items].sort((a, b) => {
@@ -301,7 +296,8 @@ export async function generateDeclarationPDF(data: Student | Student[], letterhe
     const unitName = student.unidade?.replace(/^SESI\s+/i, '').toUpperCase() || 'SESI';
     const studentName = (student.aluno || '').toUpperCase();
     const parentNames = `${(student.pai || '').toUpperCase()} e ${(student.mae || '').toUpperCase()}`;
-    const courseInfo = `NOVA EJA - ENSINO MÉDIO – ${student.anoConclusao || '2026'}.1, TURMA ${student.turma || 'A'}`;
+    const levelTitleDecl = student.nivel === 'fundamental' ? 'ENSINO FUNDAMENTAL' : 'ENSINO MÉDIO';
+    const courseInfo = `NOVA EJA - ${levelTitleDecl} – ${student.anoConclusao || '2026'}.1, TURMA ${student.turma || 'A'}`;
     
     const declarationText = `Declaramos para os devidos fins que o (a) estudante ${studentName}, filho de ${parentNames}, nascido (a) em ${formattedDate}, natural de SALGUEIRO/PE, portador (a) do CPF: ${student.cpf}, está devidamente matriculado (a) na turma ${courseInfo}, na modalidade da Educação de Jovens e Adultos, nesta instituição de ensino até a emissão deste documento.`;
 

@@ -4,7 +4,7 @@ import { Student, AppUser, AuditLog } from '../types';
 export const excelService = {
   downloadTemplate() {
     const data = [
-      ['UNIDADE', 'PERIODO', 'RA', 'TURMA', 'ALUNO', 'DATA NASCIMENTO', 'CPF', 'RG', 'TELEFONE2', 'EMAIL', 'MAE', 'PAI', 'ANO CONCLUSAO']
+      ['UNIDADE', 'PERIODO', 'RA', 'TURMA', 'NIVEL', 'ALUNO', 'DATA NASCIMENTO', 'CPF', 'RG', 'TELEFONE2', 'EMAIL', 'MAE', 'PAI', 'ANO CONCLUSAO']
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -39,6 +39,7 @@ export const excelService = {
     const studentData = students.map(s => ({
       'ID Único': s.id,
       'Unidade': s.unidade,
+      'Nível': s.nivel === 'fundamental' ? 'Fundamental' : 'Médio',
       'Ano Conclusão': s.anoConclusao || s.periodo,
       'Período': s.periodo,
       'RA': s.ra,
@@ -125,6 +126,7 @@ export const mapExcelToStudent = (item: any) => {
     mae: item['MAE']?.toString() || '',
     pai: item['PAI']?.toString() || '',
     anoConclusao: item['ANO CONCLUSAO']?.toString() || item['PERIODO']?.toString() || '',
+    nivel: item['NIVEL']?.toString()?.toLowerCase().includes('fun') || item['TURMA']?.toString()?.toUpperCase().includes('EF') ? 'fundamental' : 'medio',
     documentacaoEntregue: false,
     certificadoEnviado: false,
     dataEnvioCertificado: null,

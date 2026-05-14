@@ -10,6 +10,7 @@
         "ra": { "type": "string" },
         "turma": { "type": "string" },
         "anoConclusao": { "type": "string" },
+        "nivel": { "type": "string", "enum": ["medio", "fundamental"] },
         "aluno": { "type": "string" },
         "dataNascimento": { "type": "string" },
         "cpf": { "type": "string" },

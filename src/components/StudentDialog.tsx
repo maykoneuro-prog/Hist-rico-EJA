@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { studentService, gradeService } from '../services/db';
 import { Student, Grade, StudentStatus } from '../types';
-import { EJA_CURRICULAR_STRUCTURE } from '../constants';
+import { getCurricularStructure } from '../constants';
 import { 
   X, 
   Save, 
@@ -28,9 +28,11 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
     async function load() {
       const data = await gradeService.getByStudentId(student.id);
       
-      // Initialize with fixed curriculum
+      // Initialize with fixed curriculum based on level
+      const structure = getCurricularStructure(formData.nivel || 'medio');
       const initialGrades: Grade[] = [];
-      EJA_CURRICULAR_STRUCTURE.forEach(area => {
+      
+      structure.forEach(area => {
         area.competencies.forEach(comp => {
           // Check if student already has a score for this
           const existing = data?.find(g => g.area === area.area && g.discipline === comp.name);
@@ -49,7 +51,7 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
       setLoadingGrades(false);
     }
     load();
-  }, [student.id]);
+  }, [student.id, formData.nivel]);
 
   const handleUpdateStudent = (field: keyof Student, value: any) => {
     setFormData(prev => {
@@ -107,6 +109,7 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
         unidade: formData.unidade,
         periodo: formData.periodo,
         turma: formData.turma,
+        nivel: formData.nivel || 'medio',
         anoConclusao: formData.anoConclusao,
         dataNascimento: formData.dataNascimento,
         cpf: formData.cpf,
@@ -150,6 +153,7 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
         unidade: formData.unidade,
         periodo: formData.periodo,
         turma: formData.turma,
+        nivel: formData.nivel || 'medio',
         anoConclusao: formData.anoConclusao,
         dataNascimento: formData.dataNascimento,
         cpf: formData.cpf,
@@ -202,7 +206,18 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
 
             <section>
               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Dados Escolares</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-0.5">Nível de Ensino</label>
+                  <select
+                    value={formData.nivel || 'medio'}
+                    onChange={(e) => handleUpdateStudent('nivel', e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
+                  >
+                    <option value="medio">Ensino Médio</option>
+                    <option value="fundamental">Ensino Fundamental</option>
+                  </select>
+                </div>
                 <InputField label="Período" value={formData.periodo || ''} onChange={(v) => handleUpdateStudent('periodo', v)} />
                 <InputField label="Turma" value={formData.turma || ''} onChange={(v) => handleUpdateStudent('turma', v)} />
                 <InputField label="Ano de Conclusão" value={formData.anoConclusao || ''} onChange={(v) => handleUpdateStudent('anoConclusao', v)} />
@@ -244,7 +259,7 @@ export default function StudentDialog({ student, onClose }: StudentDialogProps) 
                       </tr>
                     </thead>
                     <tbody>
-                      {EJA_CURRICULAR_STRUCTURE.map((area, areaIdx) => (
+                      {getCurricularStructure(formData.nivel || 'medio').map((area, areaIdx) => (
                         area.competencies.map((comp, compIdx) => {
                           const gradeIdx = grades.findIndex(g => g.area === area.area && g.discipline === comp.name);
                           const grade = grades[gradeIdx] || { score: '', situation: '', hours: comp.hours };

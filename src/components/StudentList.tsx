@@ -24,6 +24,7 @@ export default function StudentList({ students, loading }: { students: Student[]
   const [searchTerm, setSearchTerm] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('');
   const [filterAnoConclusao, setFilterAnoConclusao] = useState('');
+  const [filterNivel, setFilterNivel] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [importing, setImporting] = useState(false);
@@ -52,9 +53,10 @@ export default function StudentList({ students, loading }: { students: Student[]
                           (s.cpf?.includes(searchTerm) || '');
       const matchUnidade = !filterUnidade || s.unidade === filterUnidade;
       const matchAnoConclusao = !filterAnoConclusao || s.anoConclusao === filterAnoConclusao;
-      return matchSearch && matchUnidade && matchAnoConclusao;
+      const matchNivel = !filterNivel || s.nivel === filterNivel;
+      return matchSearch && matchUnidade && matchAnoConclusao && matchNivel;
     });
-  }, [students, searchTerm, filterUnidade, filterAnoConclusao]);
+  }, [students, searchTerm, filterUnidade, filterAnoConclusao, filterNivel]);
 
   const toggleSelectAll = () => {
     if (selectedStudents.length === filteredStudents.length) {
@@ -365,6 +367,16 @@ export default function StudentList({ students, loading }: { students: Student[]
               <option value="">Anos</option>
               {anosConclusao.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
+
+            <select
+              value={filterNivel}
+              onChange={(e) => setFilterNivel(e.target.value)}
+              className="min-w-[100px] bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-blue-500 outline-none"
+            >
+              <option value="">Níveis</option>
+              <option value="medio">Médio</option>
+              <option value="fundamental">Fundamental</option>
+            </select>
           </div>
         </div>
 
@@ -381,6 +393,7 @@ export default function StudentList({ students, loading }: { students: Student[]
                   />
                 </th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Unidade</th>
+                <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Nível</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Ano Concl.</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">RA</th>
                 <th className="px-3 py-3 border-b border-gray-100 whitespace-nowrap">Turma</th>
@@ -409,6 +422,11 @@ export default function StudentList({ students, loading }: { students: Student[]
                       />
                     </td>
                     <td className="px-3 py-3 font-medium truncate max-w-[120px]" title={s.unidade}>{s.unidade}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${s.nivel === 'fundamental' ? 'bg-indigo-50 text-indigo-600' : 'bg-cyan-50 text-cyan-600'}`}>
+                        {s.nivel === 'fundamental' ? 'Fundamental' : 'Médio'}
+                      </span>
+                    </td>
                     <td className="px-3 py-3 whitespace-nowrap">{s.anoConclusao || s.periodo}</td>
                     <td className="px-3 py-3 tabular-nums">{s.ra}</td>
                     <td className="px-3 py-3 whitespace-nowrap">{s.turma}</td>
